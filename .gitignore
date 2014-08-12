@@ -1,0 +1,8 @@
+*.opensdf
+*.sln
+*.sdf
+*.suo
+*.vcxproj
+*.filters
+[Dd]ebug*/
+[Rr]elease*/

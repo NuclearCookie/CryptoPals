@@ -209,9 +209,10 @@ int _tmain(int argc, _TCHAR* argv[])
 				std::cout << "Incorrect number. Try again" << std::endl;
 			}
 		}
-		std::cout << "Please provide data to convert..." << std::endl;
+		std::cout << "Please provide data to convert..." << std::endl << std::endl;
 		std::string inputString;
 		std::cin >> inputString;
+		std::cout << std::endl << "OUTPUT:" << std::endl << std::endl;
 		switch(choice)
 		{
 		case 1:
@@ -230,7 +231,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			std::cout << "Unknown number!" << std::endl;
 			break;
 		}
-		std::cout << std::endl << "new conversion? (Y/N)" << std::endl;
+		std::cout << std::endl << std::endl << "new conversion? (Y/N)" << std::endl;
 		bool correctAnswer = false;
 		while(!correctAnswer)
 		{
@@ -253,7 +254,3 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	return 0;
 }
-
-
-
-
