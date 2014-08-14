@@ -177,7 +177,43 @@ std::string Base64ToASCII(const char* input, size_t amount)
 		outputString += asciiValues[0];
 		outputString += asciiValues[1];
 		outputString += asciiValues[2];
+
+		asciiValues[0] = 0;
+		asciiValues[1] = 0;
+		asciiValues[2] = 0;
 	}
+
+	for(unsigned int i = 0; i < amount - range; ++i)
+	{
+		if(i == 0)
+		{
+			base64Values[0] = Base64TableToDecimal(input[range+i]);
+			asciiValues[0] = base64Values[0];
+			asciiValues[0] <<= 2;
+		}
+		else if(i == 1)
+		{
+			base64Values[1] = Base64TableToDecimal(input[range+i]);
+			asciiValues[0] |= ((base64Values[1] & 0x30) >> 4);
+			//00001111
+			//11110000 << 4
+			asciiValues[1] = base64Values[1] & 0xF;
+			asciiValues[1] <<= 4;
+		}
+		else if(i == 2)
+		{
+			base64Values[2] = Base64TableToDecimal(input[range+i]);
+			asciiValues[1] |= ((base64Values[2] & 0x3C) >> 2);
+			//00000011
+			//11000000 << 6
+			asciiValues[2] = base64Values[2] & 0x3;
+			asciiValues[2] <<= 6;	
+		}
+	}
+
+	outputString += asciiValues[0];
+	outputString += asciiValues[1];
+	outputString += asciiValues[2];
 
 	return outputString;
 }
@@ -253,6 +289,24 @@ std::string HexToBase64(const char* input, size_t amount)
 		outputString += Base64Table[base64Values[1]];
 	}
 	return outputString;
+}
+
+char HexCharToChar(char input)
+{
+	if(input >= 0 && input <= 9)
+	{
+		return input + '0';
+	}
+	else if(input >= 10 &&  input <= 16)
+	{
+		return input + 'A';
+	}
+	return 0;
+}
+
+std::string Base64ToHex(const char* input, size_t amount)
+{
+	return "";
 }
 
 int _tmain(int argc, _TCHAR* argv[])
