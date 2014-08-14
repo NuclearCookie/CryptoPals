@@ -5,7 +5,7 @@
 char Base64Table[64] = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',	//00-25
 					'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',		//26-51
 					'0','1','2','3','4','5','6','7','8','9',																		//52-61
-					'+','/'};	
+					'+','/'};																										//62-63
 
 std::string ASCIIToBase64(const char* input, size_t amount)
 {
@@ -80,13 +80,8 @@ std::string ASCIIToBase64(const char* input, size_t amount)
 		{
 			//has to be atleast 1 then, so start adding first 2 mimeBytes
 			mimeBytes[0] = input[range] >> 2;
-			mimeBytes[1] = asciiBytes[0] & 3;
-			mimeBytes[1] = mimeBytes[1] << 4;	
-
-			mimeBytes[0] = Base64Table[mimeBytes[0]];
-			mimeBytes[1] = Base64Table[mimeBytes[1]];
-			mimeBytes[2] = '=';
-			mimeBytes[3] = '=';
+			mimeBytes[1] = input[range] & 3;
+			mimeBytes[1] <<= 4;	
 
 			outputString += Base64Table[mimeBytes[0]];
 			outputString += Base64Table[mimeBytes[1]];
@@ -98,10 +93,10 @@ std::string ASCIIToBase64(const char* input, size_t amount)
 		{
 			//has to be atleast 1 then, so start adding first 2 mimeBytes
 			mimeBytes[0] = input[range] >> 2;
-			mimeBytes[1] = asciiBytes[0] & 3;
+			mimeBytes[1] = input[range] & 3;
 			mimeBytes[1] = mimeBytes[1] << 4;
 			mimeBytes[1] = mimeBytes[1] | ((input[range + 1] & 0xF0) >> 4);
-			mimeBytes[2] = asciiBytes[1] & 0xF;
+			mimeBytes[2] = input[range+1] & 0xF;
 			mimeBytes[2] = mimeBytes[2] << 2;	
 
 			outputString += Base64Table[mimeBytes[0]];
@@ -110,6 +105,80 @@ std::string ASCIIToBase64(const char* input, size_t amount)
 			outputString += '=';
 		}
 	}
+	return outputString;
+}
+
+unsigned char Base64TableToDecimal(char base64Char)
+{
+	if(base64Char >= 'A' && base64Char <= 'Z')
+	{
+		return base64Char - 'A';
+	}
+	else if(base64Char >= 'a' && base64Char <= 'z')
+	{
+		return base64Char - 'a' + 26;
+	}
+	else if(base64Char >= '0' && base64Char <= '9')
+	{
+		return base64Char - '0' + 52;
+	}
+	else if(base64Char == '+')
+	{
+		return 62;
+	}
+	else if(base64Char == '/')
+	{
+		return 63;
+	}
+	return 0;
+}
+
+std::string Base64ToASCII(const char* input, size_t amount)
+{
+	// 4 entries to 3 entries...
+	int range = amount - amount % 4;
+	unsigned char base64Values[4] = {};
+	char asciiValues[3] = {};
+	std::string outputString;
+	for(int i = 0; i < range; i+=4)
+	{
+		base64Values[0] = Base64TableToDecimal(input[i]);
+		base64Values[1] = Base64TableToDecimal(input[i+1]);
+		base64Values[2] = Base64TableToDecimal(input[i+2]);
+		base64Values[3] = Base64TableToDecimal(input[i+3]);
+
+		//00111111
+		//11111100 << 2
+		asciiValues[0] = base64Values[0];
+		asciiValues[0] <<= 2;
+		//11111100
+		//00110000
+		//00000011 >> 4
+		//11111111 |
+		asciiValues[0] |= ((base64Values[1] & 0x30) >> 4);
+
+		//00001111
+		//11110000 << 4
+		asciiValues[1] = base64Values[1] & 0xF;
+		asciiValues[1] <<= 4;
+		//11110000
+		//00111100
+		//00001111 >> 2
+		//11111111 |
+		asciiValues[1] |= ((base64Values[2] & 0x3C) >> 2);
+
+		//00000011
+		//11000000 << 6
+		asciiValues[2] = base64Values[2] & 0x3;
+		asciiValues[2] <<= 6;
+		//11000000
+		//00111111 |
+		asciiValues[2] |= base64Values[3] & 0x3F;
+		outputString += asciiValues[0];
+		outputString += asciiValues[1];
+		outputString += asciiValues[2];
+	}
+
 	return outputString;
 }
 
@@ -203,8 +272,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		while (choice == -1)
 		{
 			std::cin >> choice;
-			if(choice < 0 || choice > 4)
+			if(!std::cin || choice < 0 || choice > 4)
 			{
+	            std::cin.clear(); // unset failbit
+	            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // skip bad input
 				choice = -1;
 				std::cout << "Incorrect number. Try again" << std::endl;
 			}
@@ -219,7 +290,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			std::cout << ASCIIToBase64(inputString.c_str(), inputString.size());
 			break;
 		case 2:
-			std::cout << "Currently unimplemented :(" << std::endl;
+			std::cout << Base64ToASCII(inputString.c_str(), inputString.size());
 			break;
 		case 3:
 			std::cout << HexToBase64(inputString.c_str(), inputString.size());
@@ -246,8 +317,10 @@ int _tmain(int argc, _TCHAR* argv[])
 			{
 				correctAnswer = true;
 			}
-			else
+			else if(!std::cin || correctAnswer == false)
 			{
+				std::cin.clear(); // unset failbit
+	            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // skip bad input
 				std::cout << "Unrecognised answer.. try again!" << std::endl;
 			}
 		}
