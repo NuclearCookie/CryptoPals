@@ -6,3 +6,4 @@
 *.filters
 [Dd]ebug*/
 [Rr]elease*/
+*.exe
