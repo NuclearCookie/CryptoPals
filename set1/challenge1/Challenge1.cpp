@@ -300,7 +300,7 @@ char HexCharToChar(char input)
 	}
 	else if(input >= 10 &&  input <= 16)
 	{
-		return input + 'A';
+		return input - 10 + 'A';
 	}
 	return 0;
 }
