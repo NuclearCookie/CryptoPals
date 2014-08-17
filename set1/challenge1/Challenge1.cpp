@@ -307,7 +307,49 @@ char HexCharToChar(char input)
 
 std::string Base64ToHex(const char* input, size_t amount)
 {
-	return "";
+	//6 bit to 4 bit and decoded to text
+	unsigned int range = amount - amount % 2;
+	unsigned char base64Values[2] = {};
+	unsigned char hexValues[3] = {};
+	std::string outputString;
+	for(unsigned int i = 0; i < range; i+=2)
+	{
+		base64Values[0] = Base64TableToDecimal(input[i]);
+		base64Values[1] = Base64TableToDecimal(input[i+1]);
+
+		//00111111
+		//00001111 >> 2
+		hexValues[0] = base64Values[0] >> 2;
+
+		//00000011
+		//00001100 << 2
+		//00111111
+		//00110000 &
+		//00000011 >> 4
+		//00001111 | 
+		hexValues[1] = base64Values[0] & 0x3;
+		hexValues[1] <<= 2;
+		hexValues[1] |= ((base64Values[1] & 0x30) >> 4);
+
+		//00001111
+		hexValues[2] = base64Values[1] & 0xE;
+
+		for(unsigned int j = 0; j < 3; ++j)
+		{
+			outputString += HexCharToChar(hexValues[i]);
+			hexValues[i] = 0;
+		}
+	}
+	if(amount - range != 0)
+	{
+		base64Values[0] = Base64TableToDecimal(input[range]);
+		hexValues[0] = base64Values[0] >> 2;
+		hexValues[1] = base64Values[0] & 0x3;
+		hexValues[1] <<= 2;
+		outputString += HexCharToChar(hexValues[0]);
+		outputString += HexCharToChar(hexValues[1]);
+	}
+	return outputString;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -351,7 +393,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			std::cout << HexToBase64(inputString.c_str(), inputString.size());
 			break;
 		case 4:
-			std::cout << "Currently unimplemented :(" << std::endl;
+			std::cout << Base64ToHex(inputString.c_str(), inputString.size());
 			break;
 		default:
 			std::cout << "Unknown number!" << std::endl;
