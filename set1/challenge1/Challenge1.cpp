@@ -246,8 +246,6 @@ std::string HexToBase64(const char* input, size_t amount)
 	std::string outputString;
 	for(unsigned int i = 0; i < range; i+=3)
 	{
-		base64Values[0] = 0;
-		base64Values[1] = 0;
 		hexValues[0] = CharToHexChar(input[i]);
 		hexValues[1] = CharToHexChar(input[i+1]);
 		hexValues[2] = CharToHexChar(input[i+2]);
@@ -261,9 +259,11 @@ std::string HexToBase64(const char* input, size_t amount)
 
 		outputString += Base64Table[base64Values[0]];
 		outputString += Base64Table[base64Values[1]];
+		
+		base64Values[0] = 0;
+		base64Values[1] = 0;
 	}
-	base64Values[0] = 0;
-	base64Values[1] = 0;
+
 	if(remainder == 1)
 	{
 		hexValues[0] = CharToHexChar(input[range]);
@@ -332,12 +332,12 @@ std::string Base64ToHex(const char* input, size_t amount)
 		hexValues[1] |= ((base64Values[1] & 0x30) >> 4);
 
 		//00001111
-		hexValues[2] = base64Values[1] & 0xE;
+		hexValues[2] = base64Values[1] & 0xF;
 
 		for(unsigned int j = 0; j < 3; ++j)
 		{
-			outputString += HexCharToChar(hexValues[i]);
-			hexValues[i] = 0;
+			outputString += HexCharToChar(hexValues[j]);
+			hexValues[j] = 0;
 		}
 	}
 	if(amount - range != 0)
